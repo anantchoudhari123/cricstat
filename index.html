@@ -86,6 +86,7 @@
             border-radius: 18px;
             font-size: 14px;
             line-height: 1.4;
+            white-space: pre-wrap;
         }
 
         .message.user .message-content {
@@ -97,6 +98,12 @@
             background: white;
             color: #333;
             border: 1px solid #e0e0e0;
+        }
+
+        .error-message {
+            background: #ffebee !important;
+            color: #c62828 !important;
+            border: 1px solid #ef5350 !important;
         }
 
         .chat-input {
@@ -129,6 +136,7 @@
             cursor: pointer;
             font-size: 14px;
             transition: transform 0.2s;
+            min-width: 60px;
         }
 
         .send-button:hover {
@@ -138,6 +146,7 @@
         .send-button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            transform: none;
         }
 
         .typing-indicator {
@@ -225,6 +234,21 @@
             50% { opacity: 0.5; }
             100% { opacity: 1; }
         }
+
+        .loading-spinner {
+            display: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -232,35 +256,37 @@
         <div class="chat-header">
             <div class="cricket-icon">🏏</div>
             <h1>Cricket AI Assistant</h1>
-            <p><span class="status-indicator"></span>Built to create and resolve controversies</p>
+            <p><span class="status-indicator"></span>Powered by Gemini AI</p>
         </div>
         
         <div class="chat-messages" id="messages">
             <div class="api-setup">
-                <strong>✅ Fully Functional:</strong> Your cricket chatbot is now working with an extensive knowledge base! 
-                <br>No API keys needed - everything works offline with instant responses.
+                <strong>🤖 AI-Powered Cricket Assistant:</strong> Ask me anything about cricket - from live scores to player stats, tournament results, and cricket trivia!
             </div>
             
             <div class="message bot">
                 <div class="message-content">
-                    🏏 Hello! I'm your Cricket AI Assistant. I can help you with:
-                    <br>• Live scores and match updates
-                    <br>• Player statistics and records  
-                    <br>• Tournament information (IPL, World Cup, etc.)
-                    <br>• Cricket rules and formats
-                    <br>• Historical data and trivia
-                    <br>• Team comparisons and analysis
-                    <br><br>What would you like to know about cricket?
+                    🏏 Hello! I'm your Cricket AI Assistant powered by Gemini. I can help you with:
+                    
+• Live cricket scores and match updates
+• Player statistics and career records  
+• Tournament information (IPL, World Cup, T20 leagues)
+• Cricket rules and game formats
+• Historical cricket data and trivia
+• Team comparisons and match analysis
+• Cricket news and recent developments
+
+What would you like to know about cricket today?
                 </div>
             </div>
             
             <div class="quick-questions">
-                <div class="quick-question" onclick="sendQuickQuestion('IPL 2025 winner')">IPL 2025 Winner</div>
-                <div class="quick-question" onclick="sendQuickQuestion('Virat Kohli stats')">Virat Kohli Stats</div>
-                <div class="quick-question" onclick="sendQuickQuestion('Live cricket scores')">Live Scores</div>
-                <div class="quick-question" onclick="sendQuickQuestion('Cricket World Cup 2023')">World Cup 2023</div>
-                <div class="quick-question" onclick="sendQuickQuestion('T20 World Cup 2024')">T20 WC 2024</div>
-                <div class="quick-question" onclick="sendQuickQuestion('Cricket rules')">Cricket Rules</div>
+                <div class="quick-question" onclick="sendQuickQuestion('Who won IPL 2024?')">IPL 2024 Winner</div>
+                <div class="quick-question" onclick="sendQuickQuestion('Virat Kohli recent stats')">Virat Kohli Stats</div>
+                <div class="quick-question" onclick="sendQuickQuestion('Current cricket rankings')">Team Rankings</div>
+                <div class="quick-question" onclick="sendQuickQuestion('T20 World Cup 2024 results')">T20 WC 2024</div>
+                <div class="quick-question" onclick="sendQuickQuestion('Cricket World Cup 2023 winner')">ODI WC 2023</div>
+                <div class="quick-question" onclick="sendQuickQuestion('Explain cricket rules')">Cricket Rules</div>
             </div>
             
             <div class="typing-indicator" id="typingIndicator">
@@ -273,182 +299,27 @@
         </div>
         
         <div class="chat-input">
-            <input type="text" class="input-field" id="messageInput" placeholder="Ask about cricket..." onkeypress="handleKeyPress(event)">
-            <button class="send-button" onclick="sendMessage()" id="sendButton">Send</button>
+            <input type="text" class="input-field" id="messageInput" placeholder="Ask me anything about cricket..." onkeypress="handleKeyPress(event)">
+            <button class="send-button" onclick="sendMessage()" id="sendButton">
+                <span id="sendText">Send</span>
+                <div class="loading-spinner" id="loadingSpinner"></div>
+            </button>
         </div>
     </div>
 
     <script>
-        // Comprehensive cricket knowledge base
-        const cricketKnowledgeBase = {
-            tournaments: {
-                ipl: {
-                    "2025": {
-                        winner: "Royal Challengers Bangalore (RCB)",
-                        details: "RCB won IPL 2025, defeating Punjab Kings in the final at Narendra Modi Stadium, Ahmedabad. This was RCB's maiden IPL title after 18 years of trying.",
-                        orange_cap: "Virat Kohli with 741 runs",
-                        purple_cap: "Mustafizur Rahman with 28 wickets"
-                    },
-                    "2024": {
-                        winner: "Kolkata Knight Riders (KKR)",
-                        details: "KKR won IPL 2024, defeating Sunrisers Hyderabad in the final at Chennai.",
-                        orange_cap: "Riyan Parag with 573 runs",
-                        purple_cap: "Mustafizur Rahman with 27 wickets"
-                    },
-                    "2023": {
-                        winner: "Chennai Super Kings (CSK)",
-                        details: "CSK won IPL 2023, defeating Gujarat Titans in the final at Narendra Modi Stadium."
-                    },
-                    most_successful: "Chennai Super Kings and Mumbai Indians are tied with 5 IPL titles each."
-                },
-                world_cup: {
-                    "2023_odi": {
-                        winner: "Australia",
-                        details: "Australia won the ICC Cricket World Cup 2023, defeating India in the final at Narendra Modi Stadium, Ahmedabad. Travis Head scored 137 in the final.",
-                        top_scorer: "Virat Kohli with 765 runs",
-                        top_bowler: "Mohammed Shami with 24 wickets"
-                    },
-                    "2024_t20": {
-                        winner: "India",
-                        details: "India won the T20 World Cup 2024, defeating South Africa in the final at Barbados. This ended India's 11-year ICC trophy drought.",
-                        top_scorer: "Rohit Sharma with 257 runs",
-                        top_bowler: "Arshdeep Singh with 17 wickets"
-                    },
-                    "2022_t20": {
-                        winner: "England",
-                        details: "England won the T20 World Cup 2022, defeating Pakistan in the final at Melbourne Cricket Ground."
-                    }
-                }
-            },
-            
-            players: {
-                virat_kohli: {
-                    name: "Virat Kohli",
-                    basic_stats: "Over 26,000 international runs across all formats with 80+ international centuries",
-                    records: [
-                        "Most runs in T20 World Cup history (1,141 runs)",
-                        "Fastest to reach 8,000, 9,000, 10,000, 11,000, and 12,000 ODI runs",
-                        "Most centuries in successful run chases in ODIs",
-                        "Only player to average 50+ in all three formats"
-                    ],
-                    recent_performance: "Scored 741 runs in IPL 2024, winning the Orange Cap. Key player in India's T20 World Cup 2024 victory.",
-                    career_highlights: "Former Indian captain (2017-2022), led India to #1 Test ranking"
-                },
-                
-                rohit_sharma: {
-                    name: "Rohit Sharma",
-                    basic_stats: "Current Indian captain with 10,000+ ODI runs and 4,000+ Test runs",
-                    records: [
-                        "Highest individual score in ODIs (264 vs Sri Lanka)",
-                        "Only player with 3 ODI double centuries",
-                        "Most sixes in international cricket (500+)",
-                        "Most centuries in World Cup history (7)"
-                    ],
-                    recent_performance: "Led India to T20 World Cup victory in 2024, scoring 257 runs in the tournament",
-                    leadership: "Became full-time captain across all formats in 2022"
-                },
-                
-                ms_dhoni: {
-                    name: "MS Dhoni",
-                    basic_stats: "Former Indian captain with 10,773 ODI runs and 634 international dismissals as wicket-keeper",
-                    records: [
-                        "Only captain to win all three ICC trophies (2007 T20 WC, 2011 WC, 2013 CT)",
-                        "Most successful IPL captain (5 titles with CSK)",
-                        "Most international stumpings (195)",
-                        "Highest Test score by an Indian wicket-keeper (224)"
-                    ],
-                    legacy: "Known for his finishing ability and calm leadership under pressure",
-                    current_status: "Retired from international cricket in 2020, still plays in IPL"
-                },
-                
-                sachin_tendulkar: {
-                    name: "Sachin Tendulkar",
-                    basic_stats: "34,357 international runs with 100 international centuries in 664 matches",
-                    records: [
-                        "Most runs in international cricket",
-                        "Most centuries in international cricket (100)",
-                        "First player to score 200 in ODIs",
-                        "Only player to play 200 Test matches"
-                    ],
-                    legacy: "Widely regarded as the greatest batsman of all time, known as the 'Master Blaster'",
-                    retirement: "Retired in 2013 after playing his final Test at home in Mumbai"
-                }
-            },
-            
-            formats: {
-                test: {
-                    description: "Test cricket is the longest format, played over 5 days with unlimited overs per side",
-                    rules: "Each team bats twice, with no limit on overs. A team can win by runs, wickets, or innings",
-                    duration: "Up to 5 days, 6 hours per day",
-                    clothing: "Traditional white clothing and red ball"
-                },
-                odi: {
-                    description: "One Day International (ODI) is limited to 50 overs per side",
-                    rules: "Each team faces exactly 50 overs (unless bowled out). Powerplay restrictions apply",
-                    duration: "Approximately 8 hours",
-                    clothing: "Colored clothing and white ball"
-                },
-                t20: {
-                    description: "Twenty20 (T20) is the shortest format with 20 overs per side",
-                    rules: "Each team faces exactly 20 overs. Strategic timeouts and powerplay restrictions",
-                    duration: "Approximately 3 hours",
-                    clothing: "Colored clothing and white ball"
-                }
-            },
-            
-            rules: {
-                basic: "Cricket is played between two teams of 11 players each. The batting team tries to score runs while the bowling team tries to dismiss the batsmen.",
-                ways_to_get_out: [
-                    "Bowled - ball hits the stumps",
-                    "Caught - fielder catches the ball without bouncing",
-                    "LBW - ball would have hit stumps but hit pad first",
-                    "Run out - batsman fails to reach crease before bails removed",
-                    "Stumped - wicket-keeper removes bails while batsman is out of crease",
-                    "Hit wicket - batsman hits own stumps"
-                ],
-                powerplay: "In limited overs cricket, only 2 fielders allowed outside 30-yard circle during powerplay overs",
-                drs: "Decision Review System allows teams to challenge umpire decisions using technology like ball-tracking and hot spot"
-            },
-            
-            current_info: {
-                live_scores: "For live cricket scores, visit ESPN Cricinfo (cricinfo.com), ICC official website, or download the Cricbuzz app for real-time updates.",
-                upcoming_tournaments: "Major upcoming tournaments include IPL 2025, Champions Trophy 2025, and T20 World Cup 2026.",
-                icc_rankings: "Current ICC rankings are updated monthly. India, Australia, and England are typically among the top teams."
-            }
-        };
-
-        // Conversation patterns and responses
-        const conversationPatterns = {
-            greetings: [
-                "Hello! I'm your cricket expert. What would you like to know about cricket?",
-                "Hi there! Ready to dive into the world of cricket? Ask me anything!",
-                "Greetings, cricket fan! I'm here to help with all your cricket questions.",
-                "Welcome! I'm your cricket AI assistant. What cricket topic interests you today?"
-            ],
-            
-            thanks: [
-                "You're welcome! Feel free to ask me anything else about cricket.",
-                "Happy to help! Got any other cricket questions?",
-                "My pleasure! I'm here for all your cricket queries.",
-                "Glad I could help! What else would you like to know about cricket?"
-            ],
-            
-            unknown: [
-                "I'm specialized in cricket information. Could you ask about a specific player, tournament, or cricket rule?",
-                "I'd love to help with cricket questions! Try asking about IPL, World Cup, or your favorite players.",
-                "I'm your cricket expert! Ask me about match results, player stats, or cricket formats.",
-                "Let me help you with cricket information! What specific cricket topic interests you?"
-            ]
-        };
-
-        function addMessage(content, isUser = false) {
+        // Configuration - Update this with your Vercel deployment URL
+        const API_BASE_URL = 'https://your-vercel-app.vercel.app'; // Replace with your actual Vercel URL
+        // For local development, use: const API_BASE_URL = 'http://localhost:3000';
+        
+        function addMessage(content, isUser = false, isError = false) {
             const messagesDiv = document.getElementById('messages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
             
             const contentDiv = document.createElement('div');
-            contentDiv.className = 'message-content';
-            contentDiv.innerHTML = content;
+            contentDiv.className = `message-content ${isError ? 'error-message' : ''}`;
+            contentDiv.textContent = content;
             
             messageDiv.appendChild(contentDiv);
             messagesDiv.appendChild(messageDiv);
@@ -464,8 +335,29 @@
             document.getElementById('typingIndicator').style.display = 'none';
         }
 
+        function setLoadingState(isLoading) {
+            const sendButton = document.getElementById('sendButton');
+            const sendText = document.getElementById('sendText');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const messageInput = document.getElementById('messageInput');
+            
+            sendButton.disabled = isLoading;
+            messageInput.disabled = isLoading;
+            
+            if (isLoading) {
+                sendText.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+                showTyping();
+            } else {
+                sendText.style.display = 'block';
+                loadingSpinner.style.display = 'none';
+                hideTyping();
+            }
+        }
+
         function handleKeyPress(event) {
-            if (event.key === 'Enter') {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
                 sendMessage();
             }
         }
@@ -475,152 +367,72 @@
             sendMessage();
         }
 
-        function getRandomResponse(responses) {
-            return responses[Math.floor(Math.random() * responses.length)];
-        }
-
-        function searchCricketKnowledge(query) {
-            const lowerQuery = query.toLowerCase();
-            
-            // Greeting patterns
-            if (lowerQuery.includes('hello') || lowerQuery.includes('hi') || lowerQuery.includes('hey')) {
-                return getRandomResponse(conversationPatterns.greetings);
-            }
-            
-            // Thanks patterns
-            if (lowerQuery.includes('thank') || lowerQuery.includes('thanks')) {
-                return getRandomResponse(conversationPatterns.thanks);
-            }
-            
-            // IPL queries
-            if (lowerQuery.includes('ipl')) {
-                if (lowerQuery.includes('2025')) {
-                    if (lowerQuery.includes('winner') || lowerQuery.includes('champion')) {
-                        return `${cricketKnowledgeBase.tournaments.ipl["2025"].details}`;
-                    }
-                    if (lowerQuery.includes('orange cap')) {
-                        return `IPL 2025 Orange Cap: ${cricketKnowledgeBase.tournaments.ipl["2025"].orange_cap}`;
-                    }
-                }
-                if (lowerQuery.includes('2024')) {
-                    return `${cricketKnowledgeBase.tournaments.ipl["2024"].details}`;
-                }
-                if (lowerQuery.includes('most successful') || lowerQuery.includes('most titles')) {
-                    return cricketKnowledgeBase.tournaments.ipl.most_successful;
-                }
-                return "IPL (Indian Premier League) is the most popular T20 cricket tournament. Ask me about specific years, winners, or records!";
-            }
-            
-            // World Cup queries
-            if (lowerQuery.includes('world cup')) {
-                if (lowerQuery.includes('2023') && !lowerQuery.includes('t20')) {
-                    return `${cricketKnowledgeBase.tournaments.world_cup["2023_odi"].details}`;
-                }
-                if (lowerQuery.includes('2024') && lowerQuery.includes('t20')) {
-                    return `${cricketKnowledgeBase.tournaments.world_cup["2024_t20"].details}`;
-                }
-                if (lowerQuery.includes('2022') && lowerQuery.includes('t20')) {
-                    return `${cricketKnowledgeBase.tournaments.world_cup["2022_t20"].details}`;
-                }
-                return "The Cricket World Cup is the premier international cricket tournament. Ask me about specific years or formats!";
-            }
-            
-            // Player queries
-            if (lowerQuery.includes('virat kohli') || lowerQuery.includes('kohli')) {
-                const player = cricketKnowledgeBase.players.virat_kohli;
-                if (lowerQuery.includes('stats') || lowerQuery.includes('record')) {
-                    return `${player.basic_stats}. Key records: ${player.records.join(', ')}. ${player.recent_performance}`;
-                }
-                return `${player.basic_stats}. ${player.career_highlights}`;
-            }
-            
-            if (lowerQuery.includes('rohit sharma') || lowerQuery.includes('rohit')) {
-                const player = cricketKnowledgeBase.players.rohit_sharma;
-                return `${player.basic_stats}. Key records: ${player.records.slice(0, 2).join(', ')}. ${player.recent_performance}`;
-            }
-            
-            if (lowerQuery.includes('ms dhoni') || lowerQuery.includes('dhoni')) {
-                const player = cricketKnowledgeBase.players.ms_dhoni;
-                return `${player.basic_stats}. ${player.legacy}. ${player.current_status}`;
-            }
-            
-            if (lowerQuery.includes('sachin tendulkar') || lowerQuery.includes('sachin')) {
-                const player = cricketKnowledgeBase.players.sachin_tendulkar;
-                return `${player.basic_stats}. ${player.legacy}`;
-            }
-            
-            // Format queries
-            if (lowerQuery.includes('test cricket') || lowerQuery.includes('test format')) {
-                return `${cricketKnowledgeBase.formats.test.description}. ${cricketKnowledgeBase.formats.test.rules}`;
-            }
-            
-            if (lowerQuery.includes('odi') || lowerQuery.includes('one day')) {
-                return `${cricketKnowledgeBase.formats.odi.description}. ${cricketKnowledgeBase.formats.odi.rules}`;
-            }
-            
-            if (lowerQuery.includes('t20') || lowerQuery.includes('twenty20')) {
-                return `${cricketKnowledgeBase.formats.t20.description}. ${cricketKnowledgeBase.formats.t20.rules}`;
-            }
-            
-            // Rules queries
-            if (lowerQuery.includes('cricket rules') || lowerQuery.includes('how to play')) {
-                return `${cricketKnowledgeBase.rules.basic} Ways to get out include: ${cricketKnowledgeBase.rules.ways_to_get_out.slice(0, 3).join(', ')}, and more.`;
-            }
-            
-            if (lowerQuery.includes('powerplay')) {
-                return cricketKnowledgeBase.rules.powerplay;
-            }
-            
-            if (lowerQuery.includes('drs') || lowerQuery.includes('review')) {
-                return cricketKnowledgeBase.rules.drs;
-            }
-            
-            // Live scores
-            if (lowerQuery.includes('live score') || lowerQuery.includes('current score')) {
-                return cricketKnowledgeBase.current_info.live_scores;
-            }
-            
-            // Help queries
-            if (lowerQuery.includes('help') || lowerQuery.includes('what can you do')) {
-                return "I can help you with cricket player statistics, tournament results, match information, cricket rules and formats, historical data, and much more! Try asking about specific players, tournaments, or cricket concepts.";
-            }
-            
-            return null;
-        }
-
         async function sendMessage() {
             const input = document.getElementById('messageInput');
             const message = input.value.trim();
             
             if (!message) return;
             
+            // Add user message to chat
             addMessage(message, true);
             input.value = '';
             
-            // Disable send button and show typing
-            document.getElementById('sendButton').disabled = true;
-            showTyping();
+            // Set loading state
+            setLoadingState(true);
             
-            // Add realistic delay
-            await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 1200));
-            
-            // Search knowledge base
-            const response = searchCricketKnowledge(message);
-            
-            if (response) {
-                hideTyping();
-                addMessage(`🏏 ${response}`);
-            } else {
-                hideTyping();
-                addMessage(`🏏 ${getRandomResponse(conversationPatterns.unknown)}`);
+            try {
+                // Make API call to Vercel backend
+                const response = await fetch(`${API_BASE_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    addMessage(`❌ Error: ${data.error}`, false, true);
+                } else if (data.response) {
+                    addMessage(`🏏 ${data.response}`, false);
+                } else {
+                    addMessage('❌ Sorry, I received an unexpected response. Please try again.', false, true);
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                
+                let errorMessage = '❌ Sorry, I encountered an error. ';
+                
+                if (error.message.includes('fetch')) {
+                    errorMessage += 'Please check your internet connection and try again.';
+                } else if (error.message.includes('429')) {
+                    errorMessage += 'Too many requests. Please wait a moment and try again.';
+                } else if (error.message.includes('500')) {
+                    errorMessage += 'Server error. Please try again later.';
+                } else {
+                    errorMessage += 'Please try again later.';
+                }
+                
+                addMessage(errorMessage, false, true);
+            } finally {
+                setLoadingState(false);
             }
-            
-            document.getElementById('sendButton').disabled = false;
         }
 
         // Initialize the chat
         window.addEventListener('load', function() {
             document.getElementById('messageInput').focus();
+            
+            // Show initial setup message if API_BASE_URL is not configured
+            if (API_BASE_URL === 'https://your-vercel-app.vercel.app') {
+                addMessage('⚠️ Please update the API_BASE_URL in the JavaScript code with your Vercel deployment URL.', false, true);
+            }
         });
     </script>
 </body>
